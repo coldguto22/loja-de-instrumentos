@@ -1,4 +1,4 @@
-<?php session_start(); include 'header.php'; ?>
+<?php session_start(); include 'includes/header.php'; ?>
 <div class="container mt-4">
     <h2>Carrinho de Compras</h2>
     <?php if (!empty($_SESSION['carrinho'])): ?>
