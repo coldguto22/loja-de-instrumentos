@@ -2,7 +2,7 @@
 include 'includes/header.php';
 
 // Buscar produtos do banco de dados
-$query = "SELECT * FROM produtos";
+$query = "SELECT * FROM produtosx";
 $result = $conn->query($query);
 ?>
 
