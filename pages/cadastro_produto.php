@@ -1,4 +1,4 @@
-<?php include 'conexao.php'; include 'header.php'; ?>
+<?php include 'db.php'; include 'header.php'; ?>
 <div class="container mt-4">
     <h2>Cadastro de Produto</h2>
     <form action="salvar_produto.php" method="POST" enctype="multipart/form-data">
