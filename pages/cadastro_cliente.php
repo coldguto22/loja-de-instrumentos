@@ -1,4 +1,7 @@
-<?php include 'db.php'; include 'inludes/header.php'; ?>
+<?php 
+include_once '../config/db.php'; 
+include_once '../includes/header.php'; 
+?>
 <div class="container mt-4">
     <h2>Cadastro de Cliente</h2>
     <form action="salvar_cliente.php" method="POST">
@@ -21,4 +24,4 @@
         <button type="submit" class="btn btn-success">Cadastrar Cliente</button>
     </form>
 </div>
-<?php include 'footer.php'; ?>
+<?php include_once '../includes/footer.php'; ?>
