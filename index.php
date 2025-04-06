@@ -1,8 +1,13 @@
 <?php
 include 'includes/header.php';
 
-// Buscar produtos do banco de dados
-$query = "SELECT * FROM produtosx";
+// Buscar produtos com uma imagem associada
+$query = "
+    SELECT p.*, i.caminho AS imagem
+    FROM produtosx p
+    LEFT JOIN imagens i ON p.id = i.produto_id
+    GROUP BY p.id
+";
 $result = $conn->query($query);
 ?>
 
