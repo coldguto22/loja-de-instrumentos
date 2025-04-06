@@ -3,10 +3,12 @@ include 'includes/header.php';
 
 // Buscar produtos com uma imagem associada
 $query = "
-    SELECT p.*, i.caminho AS imagem
-    FROM produtosx p
-    LEFT JOIN imagens i ON p.id = i.produto_id
-    GROUP BY p.id
+    SELECT p.*, 
+       (SELECT caminho 
+        FROM imagens 
+        WHERE produto_id = p.id 
+        LIMIT 1) AS imagem
+    FROM produtosx p;
 ";
 $result = $conn->query($query);
 ?>
@@ -15,9 +17,45 @@ $result = $conn->query($query);
 <div class="row">
     <?php if ($result && $result->num_rows > 0): ?>
         <?php while ($produto = $result->fetch_assoc()) : ?>
+            <?php
+                // Buscar todas as imagens do produto atual
+                $id_produto = $produto['id'];
+                $imgQuery = "SELECT caminho FROM imagens WHERE produto_id = $id_produto";
+                $imgResult = $conn->query($imgQuery);
+                $imagens = [];
+                while ($img = $imgResult->fetch_assoc()) {
+                    $imagens[] = $img['caminho'];
+                }
+            ?>
             <div class="col-md-4">
                 <div class="card mb-4 shadow-sm">
-                    <img src="<?= htmlspecialchars($produto['imagem']); ?>" class="card-img-top" alt="<?= htmlspecialchars($produto['nome']); ?>">
+                    <!-- Carrossel de Imagens -->
+                    <div id="carouselProduto<?= $produto['id']; ?>" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <?php foreach ($imagens as $index => $imagem): ?>
+                                <div class="carousel-item <?= $index === 0 ? 'active' : ''; ?>">
+                                    <div class="d-flex justify-content-center align-items-center overflow-hidden" style="height: 200px;">
+                                        <img src="<?= htmlspecialchars($imagem); ?>" 
+                                             class="img-fluid" 
+                                             style="max-height: 100%; object-fit: contain;" 
+                                             alt="<?= htmlspecialchars($produto['nome']); ?>">
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php if (count($imagens) > 1): ?>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselProduto<?= $produto['id']; ?>" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Anterior</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselProduto<?= $produto['id']; ?>" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Próximo</span>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Detalhes do Produto -->
                     <div class="card-body">
                         <h5 class="card-title"><?= htmlspecialchars($produto['nome']); ?></h5>
                         <p class="card-text"><?= htmlspecialchars($produto['descricao']); ?></p>
