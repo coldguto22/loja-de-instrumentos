@@ -24,9 +24,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->begin_transaction();
     
     try {
-        // Inserir dados do pedido
-        $sql_pedido = "INSERT INTO pedidos (cliente_nome, cliente_email, cliente_endereco, cliente_telefone, data_pedido, status)
-                       VALUES ('$nome', '$email', '$endereco', '$telefone', NOW(), 'Pendente')";
+        // 1. Inserir cliente
+        $sql_cliente = "INSERT INTO clientes (nome, email, telefone) 
+        VALUES ('$nome', '$email', '$telefone')";
+        $conn->query($sql_cliente);
+        $cliente_id = $conn->insert_id;
+
+        // 2. Inserir endereço
+        $sql_endereco = "INSERT INTO enderecos (cliente_id, logradouro, numero, cidade, estado, cep)
+        VALUES ('$cliente_id', '$logradouro', '$numero', '$cidade', '$estado', '$cep')";
+        $conn->query($sql_endereco);
+        $endereco_id = $conn->insert_id;
+
+        // 3. Inserir pedido
+        $sql_pedido = "INSERT INTO pedidos (cliente_id, endereco_id, status, data_pedido)
+        VALUES ('$cliente_id', '$endereco_id', 'Pendente', NOW())";
+        $conn->query($sql_pedido);
         
         if ($conn->query($sql_pedido)) {
             $pedido_id = $conn->insert_id;
