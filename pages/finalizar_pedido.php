@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 include_once '../config/db.php';
 include_once '../includes/header.php';
@@ -25,16 +29,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     try {
         // 1. Inserir cliente
-        $sql_cliente = "INSERT INTO clientes (nome, email, telefone) 
-        VALUES ('$nome', '$email', '$telefone')";
-        $conn->query($sql_cliente);
-        $cliente_id = $conn->insert_id;
+        $sql_verifica = "SELECT id FROM clientes WHERE email = '$email'";
+        $result_verifica = $conn->query($sql_verifica);
+
+        if ($result_verifica->num_rows > 0) {
+            // Cliente já existe, pega o ID
+            $row = $result_verifica->fetch_assoc();
+            $cliente_id = $row['id'];
+        } else {
+            // Cliente não existe, então insere
+            $sql_cliente = "INSERT INTO clientes (nome, email, telefone) 
+                            VALUES ('$nome', '$email', '$telefone')";
+            $conn->query($sql_cliente);
+            $cliente_id = $conn->insert_id;
+        }
 
         // 2. Inserir endereço
-        $sql_endereco = "INSERT INTO enderecos (cliente_id, logradouro, numero, cidade, estado, cep)
-        VALUES ('$cliente_id', '$logradouro', '$numero', '$cidade', '$estado', '$cep')";
-        $conn->query($sql_endereco);
-        $endereco_id = $conn->insert_id;
+        // Verificar se o endereço já existe para o cliente
+        $sql_verifica_endereco = "SELECT id FROM enderecos 
+                                WHERE cliente_id = '$cliente_id' 
+                                AND logradouro = '$logradouro' 
+                                AND numero = '$numero' 
+                                AND cidade = '$cidade' 
+                                AND estado = '$estado' 
+                                AND cep = '$cep'";
+
+        $result_endereco = $conn->query($sql_verifica_endereco);
+
+        if ($result_endereco->num_rows > 0) {
+            // Endereço já existe
+            $row = $result_endereco->fetch_assoc();
+            $endereco_id = $row['id'];
+        } else {
+            // Endereço não existe, insere
+            $sql_endereco = "INSERT INTO enderecos (cliente_id, logradouro, numero, cidade, estado, cep)
+                            VALUES ('$cliente_id', '$logradouro', '$numero', '$cidade', '$estado', '$cep')";
+            $conn->query($sql_endereco);
+            $endereco_id = $conn->insert_id;
+        }
 
         // 3. Inserir pedido
         $sql_pedido = "INSERT INTO pedidos (cliente_id, endereco_id, status, data_pedido)
