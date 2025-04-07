@@ -9,7 +9,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
     $product_id = intval($_POST['product_id']);
     
     // Buscar informações do produto no banco de dados
-    $sql = "SELECT * FROM produtosx WHERE id = $product_id";
+    $sql = "SELECT p.*, 
+           (SELECT caminho FROM imagens WHERE produto_id = p.id LIMIT 1) AS imagem_path
+           FROM produtosx p 
+           WHERE p.id = $product_id";
     $result = $conn->query($sql);
     
     if ($result && $result->num_rows > 0) {
@@ -38,25 +41,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
                 'nome' => $produto['nome'],
                 'preco' => $produto['preco'],
                 'quantidade' => 1,
-                'imagem' => $produto['imagem']
+                'imagem' => $produto['imagem_path']
             ];
         }
         
-        // Redirecionar para a página do carrinho
-        header("Location: pages/carrinho.php");
+        // Redirecionar para a página do carrinho - CORREÇÃO AQUI
+        header("Location: carrinho.php");
         exit;
     } else {
         // Produto não encontrado
-        include_once 'includes/header.php';
+        include_once '../includes/header.php';
         echo '<div class="container mt-4">';
         echo '<div class="alert alert-danger" role="alert">Produto não encontrado!</div>';
-        echo '<a href="index.php" class="btn btn-primary">Voltar para Home</a>';
+        echo '<a href="../index.php" class="btn btn-primary">Voltar para Home</a>';
         echo '</div>';
-        include_once 'includes/footer.php';
+        include_once '../includes/footer.php';
     }
 } else {
     // Redirecionamento se tentar acessar diretamente
-    header("Location: index.php");
+    header("Location: ../index.php");
     exit;
 }
 ?>
