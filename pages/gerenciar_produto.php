@@ -17,7 +17,7 @@ if (isset($_GET['excluir'])) {
     $id_excluir = intval($_GET['excluir']);
     
     // Primeiro, verificar se há imagem para excluir
-    $sql_imagem = "SELECT imagem FROM produtos WHERE id = $id_excluir";
+    $sql_imagem = "SELECT imagem FROM produtosx WHERE id = $id_excluir";
     $result_imagem = $conn->query($sql_imagem);
     
     if ($result_imagem && $result_imagem->num_rows > 0) {
@@ -28,7 +28,7 @@ if (isset($_GET['excluir'])) {
     }
     
     // Agora exclui o produto
-    $sql_excluir = "DELETE FROM produtos WHERE id = $id_excluir";
+    $sql_excluir = "DELETE FROM produtosx WHERE id = $id_excluir";
     
     if ($conn->query($sql_excluir) === TRUE) {
         $mensagem = "Produto excluído com sucesso!";
@@ -42,7 +42,7 @@ if (isset($_GET['excluir'])) {
 // Verificar se é uma edição
 if (isset($_GET['editar'])) {
     $id_editar = intval($_GET['editar']);
-    $sql_editar = "SELECT * FROM produtos WHERE id = $id_editar";
+    $sql_editar = "SELECT * FROM produtosx WHERE id = $id_editar";
     $result_editar = $conn->query($sql_editar);
     
     if ($result_editar && $result_editar->num_rows > 0) {
@@ -95,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!isset($erro_upload)) {
         if ($_POST['acao'] == "cadastrar") {
             // Inserir novo produto
-            $sql = "INSERT INTO produtos (nome, descricao, preco, estoque, imagem) 
+            $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque, imagem) 
                     VALUES ('$nome', '$descricao', $preco, $estoque, '$imagem_path')";
             
             if ($conn->query($sql) === TRUE) {
@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if ($_POST['acao'] == "atualizar") {
             // Atualizar produto existente
             $id_atualizar = intval($_POST['id']);
-            $sql = "UPDATE produtos 
+            $sql = "UPDATE produtosx 
                     SET nome='$nome', descricao='$descricao', preco=$preco, estoque=$estoque" . 
                     (!empty($imagem_path) ? ", imagem='$imagem_path'" : "") . 
                     " WHERE id=$id_atualizar";
@@ -131,13 +131,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Buscar todos os produtos para listagem
-$sql_listar = "SELECT * FROM produtos ORDER BY nome";
+// Buscar todos os produtosx para listagem
+$sql_listar = "SELECT * FROM produtosx ORDER BY nome";
 $result_listar = $conn->query($sql_listar);
 ?>
 
 <div class="container mt-4">
-    <h2>Gerenciar Produtos</h2>
+    <h2>Gerenciar produtos</h2>
     
     <?php if (isset($mensagem)): ?>
         <div class="alert alert-<?= $tipo ?> alert-dismissible fade show" role="alert">
@@ -154,7 +154,7 @@ $result_listar = $conn->query($sql_listar);
                     <h3 class="card-title mb-0"><?= $titulo_form ?></h3>
                 </div>
                 <div class="card-body">
-                    <form action="gerenciar_produtos.php" method="POST" enctype="multipart/form-data">
+                    <form action="gerenciar_produto.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="<?= $id ?>">
                         <input type="hidden" name="acao" value="<?= $acao ?>">
                         <input type="hidden" name="imagem_atual" value="<?= $imagem_atual ?>">
@@ -197,18 +197,18 @@ $result_listar = $conn->query($sql_listar);
                         </button>
                         
                         <?php if ($acao == "atualizar"): ?>
-                            <a href="gerenciar_produtos.php" class="btn btn-secondary">Cancelar</a>
+                            <a href="gerenciar_produto.php" class="btn btn-secondary">Cancelar</a>
                         <?php endif; ?>
                     </form>
                 </div>
             </div>
         </div>
         
-        <!-- Listagem de Produtos -->
+        <!-- Listagem de produtosx -->
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-secondary text-white">
-                    <h3 class="card-title mb-0">Lista de Produtos</h3>
+                    <h3 class="card-title mb-0">Lista de produtos</h3>
                 </div>
                 <div class="card-body">
                     <?php if ($result_listar && $result_listar->num_rows > 0): ?>
@@ -239,8 +239,8 @@ $result_listar = $conn->query($sql_listar);
                                             <td>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
                                             <td><?= $produto['estoque'] ?></td>
                                             <td>
-                                                <a href="gerenciar_produtos.php?editar=<?= $produto['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
-                                                <a href="gerenciar_produtos.php?excluir=<?= $produto['id'] ?>" 
+                                                <a href="gerenciar_produto.php?editar=<?= $produto['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
+                                                <a href="gerenciar_produto.php?excluir=<?= $produto['id'] ?>" 
                                                    class="btn btn-sm btn-danger"
                                                    onclick="return confirm('Tem certeza que deseja excluir este produto?')">Excluir</a>
                                             </td>
