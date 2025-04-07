@@ -8,6 +8,7 @@ $nome = "";
 $descricao = "";
 $preco = "";
 $estoque = "";
+$categoria = ""; // Nova variável para categoria
 $imagem_atual = "";
 $titulo_form = "Cadastrar Novo Produto";
 $acao = "cadastrar";
@@ -52,6 +53,7 @@ if (isset($_GET['editar'])) {
         $descricao = $produto['descricao'];
         $preco = $produto['preco'];
         $estoque = $produto['estoque'];
+        $categoria = $produto['categoria']; // Carrega a categoria
         $imagem_atual = $produto['imagem'];
         $titulo_form = "Editar Produto";
         $acao = "atualizar";
@@ -64,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $descricao = $conn->real_escape_string($_POST['descricao']);
     $preco = floatval(str_replace(',', '.', $_POST['preco']));
     $estoque = intval($_POST['estoque']);
+    $categoria = $conn->real_escape_string($_POST['categoria']); // Obter valor da categoria
     $imagem_path = isset($_POST['imagem_atual']) ? $_POST['imagem_atual'] : "";
     
     // Processar upload de imagem se enviada
@@ -95,13 +98,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!isset($erro_upload)) {
         if ($_POST['acao'] == "cadastrar") {
             // Inserir novo produto
-            $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque, imagem) 
-                    VALUES ('$nome', '$descricao', $preco, $estoque, '$imagem_path')";
+            $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque, categoria, imagem) 
+                    VALUES ('$nome', '$descricao', $preco, $estoque, '$categoria', '$imagem_path')";
             
             if ($conn->query($sql) === TRUE) {
                 $mensagem = "Produto cadastrado com sucesso!";
                 $tipo = "success";
-                $nome = $descricao = $preco = $estoque = $imagem_atual = ""; // Limpar formulário
+                $nome = $descricao = $preco = $estoque = $categoria = $imagem_atual = ""; // Limpar formulário
             } else {
                 $mensagem = "Erro ao cadastrar produto: " . $conn->error;
                 $tipo = "danger";
@@ -110,14 +113,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Atualizar produto existente
             $id_atualizar = intval($_POST['id']);
             $sql = "UPDATE produtosx 
-                    SET nome='$nome', descricao='$descricao', preco=$preco, estoque=$estoque" . 
+                    SET nome='$nome', descricao='$descricao', preco=$preco, estoque=$estoque, categoria='$categoria'" . 
                     (!empty($imagem_path) ? ", imagem='$imagem_path'" : "") . 
                     " WHERE id=$id_atualizar";
             
             if ($conn->query($sql) === TRUE) {
                 $mensagem = "Produto atualizado com sucesso!";
                 $tipo = "success";
-                $id = $nome = $descricao = $preco = $estoque = $imagem_atual = ""; // Limpar formulário
+                $id = $nome = $descricao = $preco = $estoque = $categoria = $imagem_atual = ""; // Limpar formulário
                 $titulo_form = "Cadastrar Novo Produto";
                 $acao = "cadastrar";
             } else {
@@ -130,6 +133,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $tipo = "danger";
     }
 }
+
+// Buscar categorias disponíveis (opcional - você pode adaptar isso para obter de uma tabela de categorias)
+$categorias = ["Eletrônicos", "Roupas", "Acessórios", "Alimentos", "Móveis", "Outros"];
 
 // Buscar todos os produtosx para listagem
 $sql_listar = "SELECT * FROM produtosx ORDER BY nome";
@@ -175,6 +181,24 @@ $result_listar = $conn->query($sql_listar);
                             <label for="estoque" class="form-label">Estoque</label>
                             <input type="number" class="form-control" id="estoque" name="estoque" value="<?= $estoque ?>" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="" <?= empty($categoria) ? 'selected' : '' ?>>Selecione uma categoria</option>
+                                <?php foreach ($categorias as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>" <?= $categoria == $cat ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($cat) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                                <!-- Opção adicional para inserir uma nova categoria -->
+                                <option value="outro">Outra categoria</option>
+                            </select>
+                        </div>
+                        <!-- Campo para digitar uma nova categoria (inicialmente oculto) -->
+                        <div class="mb-3" id="outra-categoria-div" style="display: none;">
+                            <label for="outra-categoria" class="form-label">Especifique a categoria</label>
+                            <input type="text" class="form-control" id="outra-categoria" name="outra-categoria">
+                        </div>
                         
                         <?php if (!empty($imagem_atual)): ?>
                             <div class="mb-3">
@@ -219,6 +243,7 @@ $result_listar = $conn->query($sql_listar);
                                         <th>ID</th>
                                         <th>Imagem</th>
                                         <th>Nome</th>
+                                        <th>Categoria</th>
                                         <th>Preço</th>
                                         <th>Estoque</th>
                                         <th>Ações</th>
@@ -236,6 +261,7 @@ $result_listar = $conn->query($sql_listar);
                                                 <?php endif; ?>
                                             </td>
                                             <td><?= htmlspecialchars($produto['nome']) ?></td>
+                                            <td><?= htmlspecialchars($produto['categoria']) ?></td>
                                             <td>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
                                             <td><?= $produto['estoque'] ?></td>
                                             <td>
@@ -261,5 +287,35 @@ $result_listar = $conn->query($sql_listar);
         <a href="../index.php" class="btn btn-secondary">Voltar para Home</a>
     </div>
 </div>
+
+<!-- Script para tratar a opção "Outra categoria" -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categoriaSelect = document.getElementById('categoria');
+    const outraCategoriaDiv = document.getElementById('outra-categoria-div');
+    const outraCategoriaInput = document.getElementById('outra-categoria');
+    
+    categoriaSelect.addEventListener('change', function() {
+        if (this.value === 'outro') {
+            outraCategoriaDiv.style.display = 'block';
+            outraCategoriaInput.setAttribute('required', 'required');
+        } else {
+            outraCategoriaDiv.style.display = 'none';
+            outraCategoriaInput.removeAttribute('required');
+        }
+    });
+    
+    // Para tratar o envio do formulário quando a opção "Outra categoria" estiver selecionada
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (categoriaSelect.value === 'outro' && outraCategoriaInput.value.trim() !== '') {
+            e.preventDefault();
+            // Define o valor do select como o conteúdo do input de outra categoria
+            categoriaSelect.value = outraCategoriaInput.value.trim();
+            // Envia o formulário
+            this.submit();
+        }
+    });
+});
+</script>
 
 <?php include_once '../includes/footer.php'; ?>
