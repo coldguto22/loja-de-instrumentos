@@ -50,6 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <li><strong>Email:</strong> <?= htmlspecialchars($email) ?></li>
                                 <li><strong>Telefone:</strong> <?= htmlspecialchars($telefone) ?></li>
                             </ul>
+                        <?php elseif (strpos($mensagem, "Duplicate entry") !== false): ?>
+                            <p>Este email já está registrado no sistema.</p>
+                            <p>Por favor, tente novamente com um email diferente ou faça login se já possui uma conta.</p>
                         <?php endif; ?>
                     <?php else: ?>
                         <p>Nenhum dado foi enviado. Por favor, preencha o formulário de cadastro.</p>
