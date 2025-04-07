@@ -2,7 +2,7 @@
 include 'includes/header.php';
 
 // Buscar produtos do banco de dados
-$query = "SELECT * FROM produtos";
+$query = "SELECT * FROM produtosx";
 $result = $conn->query($query);
 ?>
 
@@ -13,8 +13,8 @@ $result = $conn->query($query);
         <hr class="my-4">
         <p>Acesse as opções abaixo para gerenciar clientes e produtos.</p>
         <div class="mt-4">
-            <a href="pages/gerenciar_clientes.php" class="btn btn-primary me-2">Gerenciar Clientes</a>
-            <a href="pages/gerenciar_produtos.php" class="btn btn-success">Gerenciar Produtos</a>
+            <a href="pages/gerenciar_cliente.php" class="btn btn-primary me-2">Gerenciar Clientes</a>
+            <a href="pages/gerenciar_produto.php" class="btn btn-success">Gerenciar Produtos</a>
         </div>
     </div>
 
