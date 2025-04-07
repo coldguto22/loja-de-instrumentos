@@ -25,32 +25,12 @@ $descricao = "";
 $preco = "";
 $estoque = "";
 $categoria = "";
-$imagens = array(); // Array para guardar as imagens do produto
 $titulo_form = "Cadastrar Novo Produto";
 $acao = "cadastrar";
 
 // Processar exclusão
 if (isset($_GET['excluir'])) {
     $id_excluir = intval($_GET['excluir']);
-    
-    // Primeiro, buscar as imagens associadas ao produto
-    $sql_imagens = "SELECT id, caminho FROM imagens WHERE produto_id = $id_excluir";
-    $result_imagens = $conn->query($sql_imagens);
-    
-    if ($result_imagens && $result_imagens->num_rows > 0) {
-        while ($imagem = $result_imagens->fetch_assoc()) {
-            // Excluir o arquivo físico
-            $caminho_arquivo = "../" . $imagem['caminho'];
-            if (file_exists($caminho_arquivo)) {
-                unlink($caminho_arquivo);
-            }
-            
-            // Excluir o registro da imagem no banco
-            $id_imagem = $imagem['id'];
-            $sql_del_imagem = "DELETE FROM imagens WHERE id = $id_imagem";
-            $conn->query($sql_del_imagem);
-        }
-    }
     
     // Agora exclui o produto
     $sql_excluir = "DELETE FROM produtosx WHERE id = $id_excluir";
@@ -78,15 +58,6 @@ if (isset($_GET['editar'])) {
         $preco = $produto['preco'];
         $estoque = $produto['estoque'];
         $categoria = isset($produto['categoria']) ? $produto['categoria'] : '';
-        
-        // Buscar imagens associadas a este produto
-        $sql_imagens = "SELECT id, caminho FROM imagens WHERE produto_id = $id";
-        $result_imagens = $conn->query($sql_imagens);
-        if ($result_imagens && $result_imagens->num_rows > 0) {
-            while ($img = $result_imagens->fetch_assoc()) {
-                $imagens[] = $img;
-            }
-        }
         
         $titulo_form = "Editar Produto";
         $acao = "atualizar";
@@ -116,41 +87,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     VALUES ('$nome', '$descricao', $preco, $estoque, '$categoria')";
             
             if ($conn->query($sql) === TRUE) {
-                $produto_id = $conn->insert_id; // ID do produto recém-inserido
-                
-                // Processar upload de imagens (múltiplas)
-                if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
-                    $upload_dir = "../images/produtos/";
-                    
-                    // Criar diretório se não existir
-                    if (!file_exists($upload_dir)) {
-                        mkdir($upload_dir, 0777, true);
-                    }
-                    
-                    // Processar cada arquivo de imagem
-                    $total_arquivos = count($_FILES['imagens']['name']);
-                    
-                    for ($i = 0; $i < $total_arquivos; $i++) {
-                        if ($_FILES['imagens']['error'][$i] == 0) {
-                            $file_name = time() . '_' . $_FILES['imagens']['name'][$i];
-                            $file_tmp = $_FILES['imagens']['tmp_name'][$i];
-                            
-                            if (move_uploaded_file($file_tmp, $upload_dir . $file_name)) {
-                                $caminho_imagem = "/images/produtos/" . $file_name;
-                                
-                                // Inserir imagem no banco
-                                $sql_img = "INSERT INTO imagens (produto_id, caminho) VALUES ($produto_id, '$caminho_imagem')";
-                                $conn->query($sql_img);
-                            }
-                        }
-                    }
-                }
-                
                 $conn->commit();
                 $mensagem = "Produto cadastrado com sucesso!";
                 $tipo = "success";
                 $nome = $descricao = $preco = $estoque = $categoria = ""; // Limpar formulário
-                $imagens = array();
             } else {
                 throw new Exception("Erro ao cadastrar produto: " . $conn->error);
             }
@@ -162,64 +102,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     WHERE id=$id_atualizar";
             
             if ($conn->query($sql) === TRUE) {
-                // Processar novas imagens se enviadas
-                if (isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
-                    $upload_dir = "../images/produtos/";
-                    
-                    // Criar diretório se não existir
-                    if (!file_exists($upload_dir)) {
-                        mkdir($upload_dir, 0777, true);
-                    }
-                    
-                    // Processar cada arquivo de imagem
-                    $total_arquivos = count($_FILES['imagens']['name']);
-                    
-                    for ($i = 0; $i < $total_arquivos; $i++) {
-                        if ($_FILES['imagens']['error'][$i] == 0) {
-                            $file_name = time() . '_' . $_FILES['imagens']['name'][$i];
-                            $file_tmp = $_FILES['imagens']['tmp_name'][$i];
-                            
-                            if (move_uploaded_file($file_tmp, $upload_dir . $file_name)) {
-                                $caminho_imagem = "/images/produtos/" . $file_name;
-                                
-                                // Inserir imagem no banco
-                                $sql_img = "INSERT INTO imagens (produto_id, caminho) VALUES ($id_atualizar, '$caminho_imagem')";
-                                $conn->query($sql_img);
-                            }
-                        }
-                    }
-                }
-                
-                // Processar exclusão de imagens selecionadas
-                if (isset($_POST['excluir_imagens']) && is_array($_POST['excluir_imagens'])) {
-                    foreach ($_POST['excluir_imagens'] as $id_imagem) {
-                        $id_imagem = intval($id_imagem);
-                        
-                        // Obter caminho da imagem
-                        $sql_get_imagem = "SELECT caminho FROM imagens WHERE id = $id_imagem";
-                        $result_get_imagem = $conn->query($sql_get_imagem);
-                        
-                        if ($result_get_imagem && $result_get_imagem->num_rows > 0) {
-                            $imagem = $result_get_imagem->fetch_assoc();
-                            $caminho_arquivo = "../" . $imagem['caminho'];
-                            
-                            // Excluir arquivo físico
-                            if (file_exists($caminho_arquivo)) {
-                                unlink($caminho_arquivo);
-                            }
-                            
-                            // Excluir registro do banco
-                            $sql_del_imagem = "DELETE FROM imagens WHERE id = $id_imagem";
-                            $conn->query($sql_del_imagem);
-                        }
-                    }
-                }
-                
                 $conn->commit();
                 $mensagem = "Produto atualizado com sucesso!";
                 $tipo = "success";
                 $id = $nome = $descricao = $preco = $estoque = $categoria = ""; // Limpar formulário
-                $imagens = array();
                 $titulo_form = "Cadastrar Novo Produto";
                 $acao = "cadastrar";
             } else {
@@ -237,8 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $categorias = ["Cordas", "Percussão", "Sopro", "Teclas", "Acessórios", "Amplificadores", "Outros"];
 
 // Buscar todos os produtos para listagem
-$sql_listar = "SELECT p.*, (SELECT caminho FROM imagens WHERE produto_id = p.id LIMIT 1) as imagem_principal 
-               FROM produtosx p ORDER BY p.nome";
+$sql_listar = "SELECT * FROM produtosx ORDER BY nome";
 $result_listar = $conn->query($sql_listar);
 ?>
 
@@ -260,7 +145,7 @@ $result_listar = $conn->query($sql_listar);
                     <h3 class="card-title mb-0"><?= $titulo_form ?></h3>
                 </div>
                 <div class="card-body">
-                    <form action="gerenciar_produto.php" method="POST" enctype="multipart/form-data">
+                    <form action="gerenciar_produto.php" method="POST">
                         <input type="hidden" name="id" value="<?= $id ?>">
                         <input type="hidden" name="acao" value="<?= $acao ?>">
                         
@@ -300,36 +185,6 @@ $result_listar = $conn->query($sql_listar);
                             <input type="text" class="form-control" id="outra-categoria" name="outra-categoria">
                         </div>
                         
-                        <?php if (!empty($imagens)): ?>
-                            <div class="mb-3">
-                                <label class="form-label">Imagens Atuais</label>
-                                <div class="row">
-                                    <?php foreach ($imagens as $img): ?>
-                                        <div class="col-4 mb-2">
-                                            <div class="position-relative">
-                                                <img src="<?= htmlspecialchars($img['caminho']) ?>" class="img-thumbnail" style="height: 100px; object-fit: cover;">
-                                                <div class="form-check position-absolute" style="top: 5px; right: 5px;">
-                                                    <input class="form-check-input" type="checkbox" name="excluir_imagens[]" value="<?= $img['id'] ?>" id="excluir_img_<?= $img['id'] ?>">
-                                                    <label class="form-check-label" for="excluir_img_<?= $img['id'] ?>">
-                                                        <span class="badge bg-danger">Remover</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                                <small class="text-muted">Marque as imagens que deseja remover.</small>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div class="mb-3">
-                            <label for="imagens" class="form-label">
-                                <?= ($acao == "cadastrar") ? "Imagens do Produto" : "Adicionar Novas Imagens" ?>
-                            </label>
-                            <input type="file" class="form-control" id="imagens" name="imagens[]" multiple <?= ($acao == "cadastrar" && empty($imagens)) ? "required" : "" ?>>
-                            <small class="text-muted">Você pode selecionar múltiplas imagens.</small>
-                        </div>
-                        
                         <button type="submit" class="btn btn-primary">
                             <?= ($acao == "cadastrar") ? "Cadastrar" : "Atualizar" ?>
                         </button>
@@ -355,7 +210,6 @@ $result_listar = $conn->query($sql_listar);
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Imagem</th>
                                         <th>Nome</th>
                                         <th>Categoria</th>
                                         <th>Preço</th>
@@ -367,13 +221,6 @@ $result_listar = $conn->query($sql_listar);
                                     <?php while ($produto = $result_listar->fetch_assoc()): ?>
                                         <tr>
                                             <td><?= $produto['id'] ?></td>
-                                            <td>
-                                                <?php if (!empty($produto['imagem_principal'])): ?>
-                                                    <img src="<?= htmlspecialchars($produto['imagem_principal']) ?>" alt="Thumbnail" style="max-height: 50px;">
-                                                <?php else: ?>
-                                                    <span class="text-muted">Sem imagem</span>
-                                                <?php endif; ?>
-                                            </td>
                                             <td><?= htmlspecialchars($produto['nome']) ?></td>
                                             <td><?= htmlspecialchars(isset($produto['categoria']) ? $produto['categoria'] : '') ?></td>
                                             <td>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
