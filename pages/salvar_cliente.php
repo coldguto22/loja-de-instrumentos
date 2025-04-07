@@ -6,20 +6,50 @@ include_once '../includes/header.php';
 // Verificar se o formulário foi enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // Coletar dados do formulário
+    // Coletar dados do formulário - Dados do cliente
     $nome = $conn->real_escape_string($_POST['nome']);
     $email = $conn->real_escape_string($_POST['email']);
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT); // Hash da senha para segurança
     $telefone = $conn->real_escape_string($_POST['telefone']);
     
-    // Preparar e executar a consulta SQL
-    $sql = "INSERT INTO clientes (nome, email, senha, telefone) VALUES ('$nome', '$email', '$senha', '$telefone')";
+    // Coletar dados do formulário - Dados do endereço
+    $cep = $conn->real_escape_string($_POST['cep']);
+    $logradouro = $conn->real_escape_string($_POST['logradouro']);
+    $numero = $conn->real_escape_string($_POST['numero']);
+    $complemento = $conn->real_escape_string($_POST['complemento']);
+    $bairro = $conn->real_escape_string($_POST['bairro']);
+    $cidade = $conn->real_escape_string($_POST['cidade']);
+    $estado = $conn->real_escape_string($_POST['estado']);
     
-    if ($conn->query($sql) === TRUE) {
-        $mensagem = "Cliente cadastrado com sucesso!";
-        $tipo = "success";
-    } else {
-        $mensagem = "Erro ao cadastrar cliente: " . $conn->error;
+    // Iniciar transação
+    $conn->begin_transaction();
+    
+    try {
+        // Preparar e executar a consulta SQL para o cliente
+        $sql_cliente = "INSERT INTO clientes (nome, email, senha, telefone) VALUES ('$nome', '$email', '$senha', '$telefone')";
+        
+        if ($conn->query($sql_cliente) === TRUE) {
+            $cliente_id = $conn->insert_id;
+            
+            // Inserir endereço associado ao cliente
+            $sql_endereco = "INSERT INTO enderecos (cliente_id, cep, logradouro, numero, complemento, bairro, cidade, estado) 
+                             VALUES ('$cliente_id', '$cep', '$logradouro', '$numero', '$complemento', '$bairro', '$cidade', '$estado')";
+            
+            if ($conn->query($sql_endereco) === TRUE) {
+                // Confirmar transação
+                $conn->commit();
+                $mensagem = "Cliente cadastrado com sucesso!";
+                $tipo = "success";
+            } else {
+                throw new Exception("Erro ao cadastrar endereço: " . $conn->error);
+            }
+        } else {
+            throw new Exception("Erro ao cadastrar cliente: " . $conn->error);
+        }
+    } catch (Exception $e) {
+        // Reverter em caso de erro
+        $conn->rollback();
+        $mensagem = $e->getMessage();
         $tipo = "danger";
     }
 }
@@ -49,6 +79,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <li><strong>Nome:</strong> <?= htmlspecialchars($nome) ?></li>
                                 <li><strong>Email:</strong> <?= htmlspecialchars($email) ?></li>
                                 <li><strong>Telefone:</strong> <?= htmlspecialchars($telefone) ?></li>
+                            </ul>
+                            
+                            <h5 class="mt-3">Endereço:</h5>
+                            <ul>
+                                <li><strong>CEP:</strong> <?= htmlspecialchars($cep) ?></li>
+                                <li><strong>Logradouro:</strong> <?= htmlspecialchars($logradouro) ?></li>
+                                <li><strong>Número:</strong> <?= htmlspecialchars($numero) ?></li>
+                                <?php if (!empty($complemento)): ?>
+                                <li><strong>Complemento:</strong> <?= htmlspecialchars($complemento) ?></li>
+                                <?php endif; ?>
+                                <li><strong>Bairro:</strong> <?= htmlspecialchars($bairro) ?></li>
+                                <li><strong>Cidade:</strong> <?= htmlspecialchars($cidade) ?></li>
+                                <li><strong>Estado:</strong> <?= htmlspecialchars($estado) ?></li>
                             </ul>
                         <?php elseif (strpos($mensagem, "Duplicate entry") !== false): ?>
                             <p>Este email já está registrado no sistema.</p>
