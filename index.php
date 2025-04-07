@@ -33,13 +33,18 @@ $result = $conn->query($query);
 
                         <?php if ($result_img && $result_img->num_rows > 0): ?>
                             <div id="carousel<?= $produto_id ?>" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner" style="height: 250px; overflow: hidden;">
-                                    <?php $isFirst = true; ?>
+                                <div class="carousel-inner" style="height: 250px;">
+                                    <?php $index = 0; ?>
                                     <?php while ($img = $result_img->fetch_assoc()): ?>
-                                        <div class="carousel-item <?= $isFirst ? 'active' : '' ?>">
-                                            <img src="images/produtos/<?= basename($img['caminho']) ?>" class="d-block w-100 h-100 object-fit-cover" alt="Imagem do produto">
+                                        <div class="carousel-item <?= $index === 0 ? 'active' : ''; ?>">
+                                            <div class="d-flex justify-content-center align-items-center overflow-hidden" style="height: 250px;">
+                                                <img src="images/produtos/<?= basename($img['caminho']) ?>" 
+                                                     class="img-fluid" 
+                                                     style="max-height: 100%; object-fit: contain;" 
+                                                     alt="<?= htmlspecialchars($produto['nome']); ?>">
+                                            </div>
                                         </div>
-                                        <?php $isFirst = false; ?>
+                                        <?php $index++; ?>
                                     <?php endwhile; ?>
                                 </div>
                                 <button class="carousel-control-prev" type="button" data-bs-target="#carousel<?= $produto_id ?>" data-bs-slide="prev">
@@ -52,8 +57,11 @@ $result = $conn->query($query);
                                 </button>
                             </div>
                         <?php else: ?>
-                            <div style="height: 250px; overflow: hidden;">
-                                <img src="images/default-product.jpg" class="card-img-top h-100 w-100 object-fit-cover" alt="Imagem padrão">
+                            <div style="height: 250px;" class="d-flex justify-content-center align-items-center overflow-hidden">
+                                <img src="images/default-product.jpg" 
+                                     class="img-fluid" 
+                                     style="max-height: 100%; object-fit: contain;" 
+                                     alt="Imagem padrão">
                             </div>
                         <?php endif; ?>
 
