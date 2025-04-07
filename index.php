@@ -1,7 +1,7 @@
 <?php
 include 'includes/header.php';
 
-// Buscar produtos com uma imagem associada
+// Buscar produtos com uma imagem associada - CORREÇÃO DA CONSULTA SQL
 $query = "
     SELECT p.*, 
        (SELECT caminho 
@@ -11,6 +11,11 @@ $query = "
     FROM produtosx p;
 ";
 $result = $conn->query($query);
+
+// Verificar erro na consulta
+if (!$result) {
+    echo '<div class="alert alert-danger">Erro na consulta: ' . $conn->error . '</div>';
+}
 ?>
 
 <h2 class="text-center mb-4">Produtos em Destaque</h2>
@@ -23,8 +28,15 @@ $result = $conn->query($query);
                 $imgQuery = "SELECT caminho FROM imagens WHERE produto_id = $id_produto";
                 $imgResult = $conn->query($imgQuery);
                 $imagens = [];
-                while ($img = $imgResult->fetch_assoc()) {
-                    $imagens[] = $img['caminho'];
+                if ($imgResult && $imgResult->num_rows > 0) {
+                    while ($img = $imgResult->fetch_assoc()) {
+                        $imagens[] = $img['caminho'];
+                    }
+                } else {
+                    // Caso não encontre imagens na tabela imagens, use a imagem do produto
+                    if (!empty($produto['imagem'])) {
+                        $imagens[] = $produto['imagem'];
+                    }
                 }
             ?>
             <div class="col-md-4">
@@ -32,16 +44,24 @@ $result = $conn->query($query);
                     <!-- Carrossel de Imagens -->
                     <div id="carouselProduto<?= $produto['id']; ?>" class="carousel slide" data-bs-ride="carousel">
                         <div class="carousel-inner">
-                            <?php foreach ($imagens as $index => $imagem): ?>
-                                <div class="carousel-item <?= $index === 0 ? 'active' : ''; ?>">
+                            <?php if (count($imagens) > 0): ?>
+                                <?php foreach ($imagens as $index => $imagem): ?>
+                                    <div class="carousel-item <?= $index === 0 ? 'active' : ''; ?>">
+                                        <div class="d-flex justify-content-center align-items-center overflow-hidden" style="height: 200px;">
+                                            <img src="<?= htmlspecialchars($imagem); ?>" 
+                                                 class="img-fluid" 
+                                                 style="max-height: 100%; object-fit: contain;" 
+                                                 alt="<?= htmlspecialchars($produto['nome']); ?>">
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="carousel-item active">
                                     <div class="d-flex justify-content-center align-items-center overflow-hidden" style="height: 200px;">
-                                        <img src="<?= htmlspecialchars($imagem); ?>" 
-                                             class="img-fluid" 
-                                             style="max-height: 100%; object-fit: contain;" 
-                                             alt="<?= htmlspecialchars($produto['nome']); ?>">
+                                        <div class="text-muted">Sem imagem disponível</div>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                         <?php if (count($imagens) > 1): ?>
                             <button class="carousel-control-prev" type="button" data-bs-target="#carouselProduto<?= $produto['id']; ?>" data-bs-slide="prev">
