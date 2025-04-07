@@ -17,9 +17,8 @@ include_once __DIR__ . '/../config/db.php';
             <h1 class="h3 mb-0">E-commerce de Instrumentos Musicais</h1>
             <nav>
                 <a href="/index.php" class="btn btn-outline-light me-2">Home</a>
-                <a href="/pages/cadastro_cliente.php" class="btn btn-outline-light me-2">Clientes</a>
-                <a href="/pages/cadastro_produto.php" class="btn btn-outline-light me-2">Produtos</a>
-                <a href="/pages/carrinho.php" class="btn btn-warning">Carrinho</a>
+                <a href="/pages/gerenciar_cliente.php" class="btn btn-outline-light me-2">Clientes</a>
+                <a href="/pages/gerenciar_produto.php" class="btn btn-outline-light me-2">Produtos</a>
             </nav>
         </div>
     </div>

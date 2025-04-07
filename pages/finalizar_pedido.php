@@ -49,12 +49,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         // 3. Inserir pedido
-        $sql_pedido = "INSERT INTO pedidos (cliente_id, status, data_pedido, forma_pagamento) 
-                        VALUES (?, ?, 'Pendente', NOW(), ?)";
+        $sql_pedido = "INSERT INTO pedidos (cliente_id, forma_pagamento, status, data_pedido) 
+        VALUES (?, ?, 'Pendente', NOW())";
         $stmt = $conn->prepare($sql_pedido);
-        $stmt->bind_param("iis", $cliente_id, $forma_pagamento);
-        $stmt->execute();
-        $pedido_id = $conn->insert_id;
+        $stmt->bind_param("is", $cliente_id, $forma_pagamento);
         
         if ($pedido_id) {
             $total_pedido = 0;
