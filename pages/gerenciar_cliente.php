@@ -100,7 +100,7 @@ $result_listar = $conn->query($sql_listar);
                     <h3 class="card-title mb-0"><?= $titulo_form ?></h3>
                 </div>
                 <div class="card-body">
-                    <form action="gerenciar_clientes.php" method="POST">
+                    <form action="gerenciar_cliente.php" method="POST">
                         <input type="hidden" name="id" value="<?= $id ?>">
                         <input type="hidden" name="acao" value="<?= $acao ?>">
                         
@@ -122,7 +122,7 @@ $result_listar = $conn->query($sql_listar);
                         </button>
                         
                         <?php if ($acao == "atualizar"): ?>
-                            <a href="gerenciar_clientes.php" class="btn btn-secondary">Cancelar</a>
+                            <a href="gerenciar_cliente.php" class="btn btn-secondary">Cancelar</a>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -156,8 +156,8 @@ $result_listar = $conn->query($sql_listar);
                                             <td><?= htmlspecialchars($cliente['email']) ?></td>
                                             <td><?= htmlspecialchars($cliente['telefone']) ?></td>
                                             <td>
-                                                <a href="gerenciar_clientes.php?editar=<?= $cliente['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
-                                                <a href="gerenciar_clientes.php?excluir=<?= $cliente['id'] ?>" 
+                                                <a href="gerenciar_cliente.php?editar=<?= $cliente['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
+                                                <a href="gerenciar_cliente.php?excluir=<?= $cliente['id'] ?>" 
                                                    class="btn btn-sm btn-danger"
                                                    onclick="return confirm('Tem certeza que deseja excluir este cliente?')">Excluir</a>
                                             </td>
