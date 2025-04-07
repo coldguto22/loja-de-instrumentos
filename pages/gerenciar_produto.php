@@ -7,7 +7,7 @@ include_once '../config/db.php';
 include_once '../includes/header.php';
 
 // Verificar se a tabela tem a coluna 'categoria'
-$sql_check_column = "SHOW COLUMNS FROM produtos LIKE 'categoria'";
+$sql_check_column = "SHOW COLUMNS FROM produtosx LIKE 'categoria'";
 $result_check_column = $conn->query($sql_check_column);
 $tem_categoria = $result_check_column && $result_check_column->num_rows > 0;
 
@@ -67,7 +67,7 @@ if (isset($_GET['excluir'])) {
 // Verificar se é uma edição
 if (isset($_GET['editar'])) {
     $id_editar = intval($_GET['editar']);
-    $sql_editar = "SELECT * FROM produtos WHERE id = $id_editar";
+    $sql_editar = "SELECT * FROM produtosx WHERE id = $id_editar";
     $result_editar = $conn->query($sql_editar);
     
     if ($result_editar && $result_editar->num_rows > 0) {
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if ($_POST['acao'] == "cadastrar") {
             // Inserir novo produto
-            $sql = "INSERT INTO produtos (nome, descricao, preco, estoque, categoria) 
+            $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque, categoria) 
                     VALUES ('$nome', '$descricao', $preco, $estoque, '$categoria')";
             
             if ($conn->query($sql) === TRUE) {
@@ -238,7 +238,7 @@ $categorias = ["Cordas", "Percussão", "Sopro", "Teclas", "Acessórios", "Amplif
 
 // Buscar todos os produtos para listagem
 $sql_listar = "SELECT p.*, (SELECT caminho FROM imagens WHERE produto_id = p.id LIMIT 1) as imagem_principal 
-               FROM produtos p ORDER BY p.nome";
+               FROM produtosx p ORDER BY p.nome";
 $result_listar = $conn->query($sql_listar);
 ?>
 
