@@ -1,4 +1,9 @@
 <?php
+// Ativar exibição de erros
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Incluir conexão com o banco de dados
 include_once '../config/db.php';
 include_once '../includes/header.php';
@@ -12,46 +17,67 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $preco = floatval($_POST['preco']);
     $estoque = intval($_POST['estoque']);
     
-    // Processamento de imagens
-    $imagem_path = ""; // Valor padrão, caso não envie imagem
+    // Iniciar transação
+    $conn->begin_transaction();
     
-    // Verificar se há imagens enviadas
-    if(isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
-        // Diretório para armazenar as imagens
-        $upload_dir = "../uploads/";
+    try {
+        // Inserir o produto primeiro
+        $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque) 
+                VALUES ('$nome', '$descricao', $preco, $estoque)";
         
-        // Criar diretório se não existir
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+        if (!$conn->query($sql)) {
+            throw new Exception("Erro ao inserir produto: " . $conn->error);
         }
         
-        // Nome do arquivo com timestamp para evitar duplicatas
-        $file_name = time() . '_' . $_FILES['imagens']['name'][0];
-        $file_tmp = $_FILES['imagens']['tmp_name'][0];
+        $produto_id = $conn->insert_id;
         
-        // Mover o arquivo para o diretório de upload
-        if(move_uploaded_file($file_tmp, $upload_dir . $file_name)) {
-            $imagem_path = "/uploads/" . $file_name;
-        } else {
-            $erro_upload = "Erro ao fazer upload da imagem.";
+        // Processamento de imagens
+        if(isset($_FILES['imagens']) && !empty($_FILES['imagens']['name'][0])) {
+            // Diretório para armazenar as imagens
+            $upload_dir = "../uploads/";
+            
+            // Criar diretório se não existir
+            if (!file_exists($upload_dir)) {
+                if (!mkdir($upload_dir, 0777, true)) {
+                    throw new Exception("Falha ao criar diretório de uploads");
+                }
+            }
+            
+            // Processar todas as imagens
+            $imagens_count = count($_FILES['imagens']['name']);
+            
+            for ($i = 0; $i < $imagens_count; $i++) {
+                if(!empty($_FILES['imagens']['name'][$i])) {
+                    // Nome do arquivo com timestamp para evitar duplicatas
+                    $file_name = time() . '_' . $_FILES['imagens']['name'][$i];
+                    $file_tmp = $_FILES['imagens']['tmp_name'][$i];
+                    $file_path = $upload_dir . $file_name;
+                    
+                    // Mover o arquivo para o diretório de upload
+                    if(!move_uploaded_file($file_tmp, $file_path)) {
+                        throw new Exception("Erro ao fazer upload da imagem " . ($i+1));
+                    }
+                    
+                    $imagem_path = "/uploads/" . $file_name;
+                    
+                    // Inserir na tabela imagens
+                    $sql_imagem = "INSERT INTO imagens (produto_id, caminho) VALUES ($produto_id, '$imagem_path')";
+                    if (!$conn->query($sql_imagem)) {
+                        throw new Exception("Erro ao salvar imagem no banco: " . $conn->error);
+                    }
+                }
+            }
         }
-    }
-    
-    // Preparar e executar a consulta SQL se não houver erro de upload
-    if (!isset($erro_upload)) {
-        $sql = "INSERT INTO produtosx (nome, descricao, preco, estoque, imagem) 
-                VALUES ('$nome', '$descricao', $preco, $estoque, '$imagem_path')";
         
-        if ($conn->query($sql) === TRUE) {
-            $mensagem = "Produto cadastrado com sucesso!";
-            $tipo = "success";
-            $produto_id = $conn->insert_id;
-        } else {
-            $mensagem = "Erro ao cadastrar produto: " . $conn->error;
-            $tipo = "danger";
-        }
-    } else {
-        $mensagem = $erro_upload;
+        // Se chegou até aqui, tudo deu certo
+        $conn->commit();
+        $mensagem = "Produto cadastrado com sucesso!";
+        $tipo = "success";
+        
+    } catch (Exception $e) {
+        // Reverter em caso de erro
+        $conn->rollback();
+        $mensagem = $e->getMessage();
         $tipo = "danger";
     }
 }
@@ -87,17 +113,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <li><strong>ID:</strong> <?= $produto_id ?></li>
                                     </ul>
                                 </div>
-                                <?php if (!empty($imagem_path)): ?>
-                                <div class="col-md-4">
+                            </div>
+                            
+                            <?php 
+                            // Buscar e exibir imagens
+                            $img_query = "SELECT caminho FROM imagens WHERE produto_id = $produto_id";
+                            $img_result = $conn->query($img_query);
+                            if ($img_result && $img_result->num_rows > 0):
+                            ?>
+                            <h5>Imagens do produto:</h5>
+                            <div class="row">
+                                <?php while ($img = $img_result->fetch_assoc()): ?>
+                                <div class="col-md-3 mb-3">
                                     <div class="card">
-                                        <img src="<?= htmlspecialchars($imagem_path) ?>" class="card-img-top" alt="Imagem do produto">
-                                        <div class="card-body">
-                                            <p class="card-text">Imagem enviada com sucesso.</p>
-                                        </div>
+                                        <img src="<?= htmlspecialchars($img['caminho']) ?>" class="card-img-top" alt="Imagem do produto">
                                     </div>
                                 </div>
-                                <?php endif; ?>
+                                <?php endwhile; ?>
                             </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php else: ?>
                         <p>Nenhum dado foi enviado. Por favor, preencha o formulário de cadastro de produto.</p>
