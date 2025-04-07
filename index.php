@@ -60,7 +60,7 @@ $result = $conn->query($query);
                         <h5 class="card-title"><?= htmlspecialchars($produto['nome']); ?></h5>
                         <p class="card-text"><?= htmlspecialchars($produto['descricao']); ?></p>
                         <p class="fw-bold">R$ <?= number_format($produto['preco'], 2, ',', '.'); ?></p>
-                        <form action="/add_to_cart.php" method="POST">
+                        <form action="/pages/add_to_cart.php" method="POST">
                             <input type="hidden" name="product_id" value="<?= $produto['id']; ?>">
                             <button type="submit" class="btn btn-primary w-100">Comprar</button>
                         </form>

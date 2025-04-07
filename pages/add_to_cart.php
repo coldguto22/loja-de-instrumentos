@@ -1,6 +1,6 @@
 <?php
 session_start();
-include_once 'config/db.php';
+include_once '../config/db.php';
 
 // Verificar se o formulário foi enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
